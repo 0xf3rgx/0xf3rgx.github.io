@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build Your Dev Blog for Free — 0xf3rgx</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
+
+  :root {
+    --bg: #0a0e0a;
+    --surface: #0f1410;
+    --border: #1e2d1e;
+    --green: #4afa7a;
+    --green-dim: #2a7a45;
+    --green-glow: rgba(74,250,122,0.15);
+    --text: #c8d8c8;
+    --text-dim: #6a886a;
+    --red: #ff4d6d;
+    --yellow: #ffd166;
+    --cyan: #06d6c8;
+    --white: #e8f5e8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .header-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--green-dim);
+    padding: 12px 40px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-r { background: #ff5f56; }
+  .dot-y { background: #ffbd2e; }
+  .dot-g { background: #27c93f; }
+
+  .header-url {
+    margin-left: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    flex: 1;
+    text-align: center;
+  }
+
+  .header-url span { color: var(--green); }
+
+  .hero {
+    padding: 80px 40px 60px;
+    max-width: 860px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -200px; right: -200px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--green-dim), transparent);
+  }
+
+  .tag-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--green);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tag-line::before { content: '//'; color: var(--green-dim); }
+
+  h1 {
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--white);
+    margin-bottom: 20px;
+    letter-spacing: -1px;
+  }
+
+  h1 .accent { color: var(--green); }
+
+  .meta {
+    display: flex;
+    gap: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+  }
+
+  .meta span { display: flex; align-items: center; gap: 6px; }
+  .meta span::before { content: '▸'; color: var(--green); }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--green-dim), transparent);
+    margin: 48px 0;
+  }
+
+  .content {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 40px 80px;
+  }
+
+  .intro-text {
+    font-size: 18px;
+    line-height: 1.8;
+    color: var(--text);
+    margin-bottom: 48px;
+    border-left: 3px solid var(--green);
+    padding-left: 24px;
+  }
+
+  /* Section headers */
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 56px 0 24px;
+  }
+
+  .step-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--bg);
+    background: var(--green);
+    padding: 4px 10px;
+    letter-spacing: 2px;
+  }
+
+  .step-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--white);
+    letter-spacing: -0.5px;
+  }
+
+  .step-desc {
+    font-size: 16px;
+    line-height: 1.8;
+    color: var(--text);
+    margin-bottom: 24px;
+  }
+
+  /* Screenshot container */
+  .screenshot-wrap {
+    position: relative;
+    margin: 28px 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(74,250,122,0.05), 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .screenshot-wrap img {
+    width: 100%;
+    display: block;
+  }
+
+  .screenshot-label {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(10,14,10,0.9);
+    border: 1px solid var(--green-dim);
+    color: var(--green);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    letter-spacing: 1px;
+    backdrop-filter: blur(4px);
+  }
+
+  /* Highlights / callouts */
+  .highlight-box {
+    background: var(--green-glow);
+    border: 1px solid var(--green-dim);
+    border-left: 4px solid var(--green);
+    padding: 16px 20px;
+    margin: 20px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .highlight-box .hl-icon {
+    color: var(--green);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: block;
+    letter-spacing: 2px;
+  }
+
+  .warn-box {
+    background: rgba(255,77,109,0.08);
+    border: 1px solid rgba(255,77,109,0.3);
+    border-left: 4px solid var(--red);
+    padding: 16px 20px;
+    margin: 20px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .warn-box .hl-icon { color: var(--red); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; margin-bottom: 6px; display: block; letter-spacing: 2px; }
+
+  /* Code blocks */
+  .code-block {
+    background: #060b06;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .code-top {
+    background: #0c120c;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .code-top .lang { color: var(--green); font-weight: 700; }
+
+  .code-body {
+    padding: 20px;
+    font-size: 13px;
+    line-height: 1.8;
+    overflow-x: auto;
+  }
+
+  .code-body .prompt { color: var(--green-dim); user-select: none; }
+  .code-body .cmd { color: var(--green); }
+  .code-body .comment { color: var(--text-dim); }
+  .code-body .key { color: var(--cyan); }
+  .code-body .val { color: var(--yellow); }
+  .code-body .str { color: #ff9a8b; }
+  .code-body .path { color: var(--text-dim); font-size: 11px; }
+
+  /* Inline code */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: rgba(74,250,122,0.1);
+    color: var(--green);
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid rgba(74,250,122,0.2);
+  }
+
+  /* Steps list */
+  .steps-list {
+    list-style: none;
+    margin: 16px 0;
+  }
+
+  .steps-list li {
+    padding: 10px 0 10px 28px;
+    position: relative;
+    font-size: 15px;
+    line-height: 1.7;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .steps-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--green);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Bottom CTA */
+  .outro {
+    margin-top: 72px;
+    padding: 40px;
+    background: var(--surface);
+    border: 1px solid var(--green-dim);
+    border-radius: 8px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .outro::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(74,250,122,0.08), transparent 70%);
+    pointer-events: none;
+  }
+
+  .outro h2 { font-size: 28px; font-weight: 800; color: var(--white); margin-bottom: 12px; }
+  .outro p { color: var(--text-dim); font-size: 15px; line-height: 1.7; }
+  .outro .link { color: var(--green); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 14px; display: inline-block; margin-top: 16px; border-bottom: 1px solid var(--green-dim); padding-bottom: 2px; }
+
+  .section-img-caption {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: -10px;
+    margin-bottom: 20px;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="header-bar">
+  <div class="dot dot-r"></div>
+  <div class="dot dot-y"></div>
+  <div class="dot dot-g"></div>
+  <div class="header-url"><span>0xf3rgx</span>.github.io/posts/build-your-dev-blog</div>
+</div>
+
+<div class="hero">
+  <div class="tag-line">Tutorial · DevOps · Free Hosting</div>
+  <h1>Build Your Personal Dev Blog<br>for <span class="accent">Free</span> with GitHub Pages</h1>
+  <div class="meta">
+    <span>By Belal Fergani</span>
+    <span>April 2026</span>
+    <span>~10 min read</span>
+    <span>Jekyll · Chirpy · GitHub Actions</span>
+  </div>
+</div>
+
+<div class="content">
+
+  <p class="intro-text">
+    You want your own blog. No monthly fees. No WordPress drama. No "free tier" that disappears after 14 days.
+    Just a clean, fast, developer blog that you own. Here's exactly how I set up mine — from zero to deployed — using GitHub Pages and the Chirpy Jekyll theme.
+  </p>
+
+  <div class="divider"></div>
+
+  <!-- STEP 1 -->
+  <div class="step-header">
+    <div class="step-num">STEP 01</div>
+    <div class="step-title">Fork the Chirpy Starter Template</div>
+  </div>
+
+  <p class="step-desc">
+    Head over to the <strong style="color:var(--white)">chirpy-starter</strong> repo on GitHub. This is your base — a ready-made Jekyll setup that handles dark mode, categories, tags, SEO, and RSS out of the box. Click <strong style="color:var(--green)">Use this template → Create a new repository</strong>.
+  </p>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775081196377_image.png" alt="Chirpy Starter repo on GitHub">
+    <div class="screenshot-label">github.com/cotes2020/chirpy-starter</div>
+  </div>
+  <div class="section-img-caption">// Hit "Use this template" — top right green button</div>
+
+  <div class="highlight-box">
+    <span class="hl-icon">★ IMPORTANT</span>
+    When naming your new repository, you <strong>must</strong> use the format: <code>yourusername.github.io</code> — exactly your GitHub username followed by <code>.github.io</code>. This is what tells GitHub to host it as a Pages site for free.
+  </div>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775081816091_image.png" alt="Creating the repo with github.io name">
+    <div class="screenshot-label">Naming the repo: 0xf3rgx.github.io</div>
+  </div>
+  <div class="section-img-caption">// Owner / 0xf3rgx.github.io → Create repository</div>
+
+  <div class="divider"></div>
+
+  <!-- STEP 2 -->
+  <div class="step-header">
+    <div class="step-num">STEP 02</div>
+    <div class="step-title">Update _config.yml with Your Info</div>
+  </div>
+
+  <p class="step-desc">
+    Inside your new repo, open <code>_config.yml</code>. This file is the brain of your blog — your name, URL, tagline, and social links all live here. Edit it directly in GitHub, no cloning needed for this step.
+  </p>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775082018387_image.png" alt="Editing _config.yml">
+    <div class="screenshot-label">_config.yml — editing in GitHub</div>
+  </div>
+
+  <p class="step-desc">Here's what I updated in mine:</p>
+
+  <div class="code-block">
+    <div class="code-top"><span class="lang">_config.yml</span><span>YAML</span></div>
+    <div class="code-body">
+      <span class="key">title</span>: <span class="val">0xf3rgx</span><br>
+      <span class="key">tagline</span>: <span class="val">Penetration Tester & Bug Hunter</span><br>
+      <span class="key">description</span>: <span class="str">A blog about Cybersecurity, Web Pentesting, OSINT and Bug Hunting by Belal Fergani.</span><br>
+      <span class="key">url</span>: <span class="val">"https://0xf3rgx.github.io"</span><br><br>
+      <span class="key">github</span>:<br>
+      &nbsp;&nbsp;<span class="key">username</span>: <span class="val">0xf3rgx</span>
+    </div>
+  </div>
+
+  <p class="step-desc">Once you're done, scroll down and hit <strong style="color:var(--green)">Commit changes</strong>.</p>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775082018387_image.png" alt="Committing config changes">
+    <div class="screenshot-label">Commit message: "adding personal username url"</div>
+  </div>
+
+  <div class="highlight-box">
+    <span class="hl-icon">★ TIP</span>
+    As soon as you commit, GitHub Actions automatically kicks off a build pipeline that deploys your site to GitHub Pages. You don't have to do anything manually.
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- STEP 3 -->
+  <div class="step-header">
+    <div class="step-num">STEP 03</div>
+    <div class="step-title">Watch GitHub Actions Deploy Your Site</div>
+  </div>
+
+  <p class="step-desc">
+    Click the <strong style="color:var(--white)">Actions</strong> tab in your repo. You'll see two jobs kick off automatically — <strong style="color:var(--green)">build</strong> then <strong style="color:var(--green)">deploy</strong>. Both should go green in under a minute.
+  </p>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775082406005_image.png" alt="GitHub Actions workflows">
+    <div class="screenshot-label">Actions tab — all green ✓</div>
+  </div>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775082461547_image.png" alt="Build and deploy success">
+    <div class="screenshot-label">Build → Deploy pipeline: Success in 38s</div>
+  </div>
+
+  <p class="step-desc">
+    Once it's done, visit <code>https://yourusername.github.io</code> — your blog is live. Here's what the default Chirpy theme looks like before customization:
+  </p>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775082703393_image.png" alt="Blog live on GitHub Pages">
+    <div class="screenshot-label">0xf3rgx.github.io — live on the internet 🔥</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- STEP 4 -->
+  <div class="step-header">
+    <div class="step-num">STEP 04</div>
+    <div class="step-title">Clone the Repo & Open It Locally</div>
+  </div>
+
+  <p class="step-desc">
+    Now let's bring the project to your machine so you can make real changes. Copy the repo URL from the <strong style="color:var(--green)">Code</strong> button, then open Git Bash in your target folder.
+  </p>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775082773627_image.png" alt="Copying the repo URL">
+    <div class="screenshot-label">Code → Copy HTTPS URL</div>
+  </div>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775082834070_image.png" alt="Right-click Open Git Bash">
+    <div class="screenshot-label">Right-click → Open Git Bash here</div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-top"><span class="lang">Git Bash</span><span>SHELL</span></div>
+    <div class="code-body">
+      <span class="comment"># Clone your repo (not the template — YOUR fork)</span><br>
+      <span class="prompt">$ </span><span class="cmd">git clone https://github.com/0xf3rgx/0xf3rgx.github.io.git</span><br><br>
+      <span class="comment"># Navigate into it</span><br>
+      <span class="prompt">$ </span><span class="cmd">cd 0xf3rgx.github.io</span><br><br>
+      <span class="comment"># Open in VS Code</span><br>
+      <span class="prompt">$ </span><span class="cmd">code .</span>
+    </div>
+  </div>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775083056682_image.png" alt="Git clone in terminal">
+    <div class="screenshot-label">git clone → cd → code .</div>
+  </div>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775083063712_image.png" alt="Inside the repo folder">
+    <div class="screenshot-label">Repo structure visible in terminal</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- STEP 5 -->
+  <div class="step-header">
+    <div class="step-num">STEP 05</div>
+    <div class="step-title">Install Ruby & Jekyll</div>
+  </div>
+
+  <p class="step-desc">
+    Jekyll runs on Ruby, so you need it installed first. Go to <code>rubyinstaller.org/downloads</code> and grab the right version.
+  </p>
+
+  <div class="warn-box">
+    <span class="hl-icon">⚠ DO NOT SKIP THIS</span>
+    Install <strong>Ruby+Devkit 3.3.x (x64)</strong> — NOT Ruby 4.x. The Chirpy theme is only compatible with Ruby 3. If you install Ruby 4, things will break and editing <code>Gemfile</code> won't fix it. Learned this the hard way.
+  </div>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775083142490_image.png" alt="RubyInstaller downloads page">
+    <div class="screenshot-label">rubyinstaller.org/downloads — grab Ruby+Devkit 3.3.11-1 (x64)</div>
+  </div>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775083400863_image.png" alt="Ruby installed folder">
+    <div class="screenshot-label">After install — Ruby34-x64 folder exists</div>
+  </div>
+
+  <p class="step-desc">Now install Bundler and your project dependencies:</p>
+
+  <div class="code-block">
+    <div class="code-top"><span class="lang">Git Bash — Ruby install dir</span><span>SHELL</span></div>
+    <div class="code-body">
+      <span class="comment"># Install bundler globally (run this from the Ruby folder)</span><br>
+      <span class="prompt">$ </span><span class="cmd">gem install bundler</span><br><br>
+      <span class="comment"># Go to your blog folder and install dependencies</span><br>
+      <span class="prompt">$ </span><span class="cmd">cd /path/to/0xf3rgx.github.io</span><br>
+      <span class="prompt">$ </span><span class="cmd">bundle install</span><br><br>
+      <span class="comment"># Verify both are working</span><br>
+      <span class="prompt">$ </span><span class="cmd">ruby -v</span><br>
+      <span class="prompt">$ </span><span class="cmd">bundle -v</span>
+    </div>
+  </div>
+
+  <div class="highlight-box">
+    <span class="hl-icon">⏱ HEADS UP</span>
+    <code>bundle install</code> can take 20–30 minutes on a first run. That's completely normal. Grab a coffee and let it do its thing.
+  </div>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775083619105_image.png" alt="bundle install in VS Code terminal">
+    <div class="screenshot-label">Running `bundle` in VS Code terminal</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- STEP 6 -->
+  <div class="step-header">
+    <div class="step-num">STEP 06</div>
+    <div class="step-title">Run the Local Server</div>
+  </div>
+
+  <p class="step-desc">
+    Now you can spin up a local preview server. Every change you save will auto-reload in the browser.
+  </p>
+
+  <div class="code-block">
+    <div class="code-top"><span class="lang">VS Code Terminal</span><span>SHELL</span></div>
+    <div class="code-body">
+      <span class="prompt">$ </span><span class="cmd">bundle exec jekyll s</span>
+    </div>
+  </div>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775083699488_image.png" alt="Jekyll server running">
+    <div class="screenshot-label">Server running at http://127.0.0.1:4000/</div>
+  </div>
+
+  <p class="step-desc">Open <code>http://127.0.0.1:4000</code> in your browser and you'll see your blog running locally. Now go customize <code>_config.yml</code> with your real info:</p>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775083833874_image.png" alt="VS Code with config.yml open">
+    <div class="screenshot-label">_config.yml open in VS Code — title, tagline, description, url all set</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- STEP 7 -->
+  <div class="step-header">
+    <div class="step-num">STEP 07</div>
+    <div class="step-title">Fix the TMP File Bug</div>
+  </div>
+
+  <p class="step-desc">
+    If you notice the browser keeps refreshing on its own while the server is running, that's a known Jekyll/Windows issue caused by a temp file. Easy fix — create a plugin file that tells Jekyll to ignore it.
+  </p>
+
+  <p class="step-desc">Inside <code>_plugins/</code>, create a new file called <code>watcher-patch.rb</code> and paste this:</p>
+
+  <div class="code-block">
+    <div class="code-top"><span class="lang">_plugins/watcher-patch.rb</span><span>RUBY</span></div>
+    <div class="code-body">
+      <span class="comment"># frozen_string_literal: true</span><br><br>
+      require <span class="str">'jekyll-watch'</span><br><br>
+      module <span class="key">Jekyll</span><br>
+      &nbsp;&nbsp;module <span class="key">Watcher</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;extend self<br><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;alias_method <span class="val">:original_listen_ignore_paths</span>, <span class="val">:listen_ignore_paths</span><br><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;def <span class="key">listen_ignore_paths</span>(options)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;original_listen_ignore_paths(options) + [<span class="str">%r!.*\.TMP!i</span>]<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;end<br>
+      &nbsp;&nbsp;end<br>
+      end
+    </div>
+  </div>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775083912737_image.png" alt="watcher-patch.rb in VS Code">
+    <div class="screenshot-label">_plugins/watcher-patch.rb — the TMP file fix</div>
+  </div>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775084005666_image.png" alt="watcher-patch.rb on GitHub">
+    <div class="screenshot-label">Same file referenced in the original blog that inspired this guide</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- STEP 8 -->
+  <div class="step-header">
+    <div class="step-num">STEP 08</div>
+    <div class="step-title">Write Your First Post</div>
+  </div>
+
+  <p class="step-desc">
+    Posts in Jekyll live inside the <code>_posts/</code> folder. File naming is strict — it has to follow this format exactly:
+  </p>
+
+  <div class="code-block">
+    <div class="code-top"><span class="lang">Filename Format</span><span>REQUIRED</span></div>
+    <div class="code-body">
+      <span class="val">YYYY-MM-DD-your-post-title.md</span><br><br>
+      <span class="comment"># Example:</span><br>
+      <span class="val">2026-04-02-how-to-build-your-blog.md</span>
+    </div>
+  </div>
+
+  <p class="step-desc">At the top of every post file, you need front matter — the metadata block:</p>
+
+  <div class="code-block">
+    <div class="code-top"><span class="lang">Post Front Matter</span><span>MARKDOWN</span></div>
+    <div class="code-body">
+      <span class="comment">---</span><br>
+      <span class="key">title</span>: <span class="str">"Build Your Dev Blog for Free with GitHub Pages"</span><br>
+      <span class="key">date</span>: <span class="val">2026-04-02 00:00:00 +0200</span><br>
+      <span class="key">categories</span>: [<span class="str">Tutorial</span>]<br>
+      <span class="key">tags</span>: [<span class="str">github</span>, <span class="str">jekyll</span>, <span class="str">blogging</span>, <span class="str">devops</span>]<br>
+      <span class="comment">---</span><br><br>
+      <span class="val"># Your content starts here</span>
+    </div>
+  </div>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775084082557_image.png" alt="First post in VS Code">
+    <div class="screenshot-label">First post file open in VS Code</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- STEP 9 -->
+  <div class="step-header">
+    <div class="step-num">STEP 09</div>
+    <div class="step-title">Push Your Changes & Deploy</div>
+  </div>
+
+  <p class="step-desc">
+    Once you're happy with your changes locally, it's time to push them up. Three commands and you're done:
+  </p>
+
+  <div class="code-block">
+    <div class="code-top"><span class="lang">VS Code Terminal</span><span>SHELL</span></div>
+    <div class="code-body">
+      <span class="comment"># Stage all changes</span><br>
+      <span class="prompt">$ </span><span class="cmd">git add .</span><br><br>
+      <span class="comment"># Commit with a message</span><br>
+      <span class="prompt">$ </span><span class="cmd">git commit -m "customizing my personal blog"</span><br><br>
+      <span class="comment"># Push to GitHub → triggers auto-deploy</span><br>
+      <span class="prompt">$ </span><span class="cmd">git push origin main</span>
+    </div>
+  </div>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775084151408_image.png" alt="git add and commit">
+    <div class="screenshot-label">git add . → git commit → 3 files changed</div>
+  </div>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775084219063_image.png" alt="git push origin main">
+    <div class="screenshot-label">git push origin main — objects written, refs updated</div>
+  </div>
+
+  <p class="step-desc">
+    Head back to the <strong style="color:var(--white)">Actions</strong> tab and watch the pipeline run. Same as before — build then deploy, both green in under a minute.
+  </p>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775084302270_image.png" alt="Actions showing all green">
+    <div class="screenshot-label">Actions → All workflows → ✓ customizing my personal blog</div>
+  </div>
+
+  <div class="screenshot-wrap">
+    <img src="/mnt/user-data/uploads/1775084366252_image.png" alt="Blog live with first post">
+    <div class="screenshot-label">0xf3rgx.github.io — live, first post visible 🔥</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="outro">
+    <h2>That's it. You're live. 🚀</h2>
+    <p>
+      Free hosting. Custom domain support. Dark mode. Auto-deploy on every push.<br>
+      This setup costs nothing and gives you full ownership of your content.
+    </p>
+    <br>
+    <p style="color:var(--text)">Links used in this guide:</p>
+    <a class="link" href="https://github.com/cotes2020/chirpy-starter">github.com/cotes2020/chirpy-starter</a><br>
+    <a class="link" href="https://rubyinstaller.org/downloads/">rubyinstaller.org/downloads</a><br>
+    <a class="link" href="https://chirpy.cotes.page/posts/getting-started/">chirpy.cotes.page — theme guide</a>
+  </div>
+
+</div>
+</body>
+</html>
